@@ -128,7 +128,12 @@ def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed,
 
     monster = False
 
+    # assuming it finds something
     if soonest != -1:
+
+        # realized there is unintended behvaior when no recent weather window can be found, instead takes the last point of data (at index -1); bandaid fix for now
+        if recent == -1:
+            recent = soonest
 
         # finding the time from the current moment to the next weather window
         literal_time = parse_time_str(weather_list[soonest][2]) # this is the literal time it takes place at
@@ -139,15 +144,6 @@ def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed,
         hours = math.floor((weather_time / 60) / 60)
 
         # building output time message + the disc timestamp
-        # msg = ''
-        # if hours > 0:
-        #     msg += f'{hours} hours, '
-        # if minutes > 0:
-        #     msg += f'{minutes} minutes, '
-        # if seconds >= 0:
-        #     msg += f'{seconds} seconds left.'
-        #     msg += f' <t:{round(literal_time.timestamp())}:R>'
-
         msg = f'{responses.get_disc_time(weather_list, soonest)}'
 
         # finding the time from recent weather window to the current moment
@@ -155,16 +151,6 @@ def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed,
         recent_seconds = check_time % 60
         recent_minutes = math.floor(check_time / 60) % 60
         recent_hours = math.floor((check_time / 60) / 60)
-
-        # bulding output time message for recent
-        # recent_msg = ''
-        # if recent_hours > 0:
-        #     recent_msg += f'{recent_hours} hours, '
-        # if recent_minutes > 0:
-        #     recent_msg += f'{recent_minutes} minutes, '
-        # if recent_seconds >= 0:
-        #     recent_msg += f'{recent_seconds} seconds ago.'
-            #recent_msg += f' <t:{round(literal_time.timestamp())}:R>'
         
         recent_msg = f'{responses.get_disc_time(weather_list, recent)}'
 
@@ -179,6 +165,7 @@ def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed,
             nms_embed.add_field(name=f'Possible {boss_name} Soon', value=f'Upcoming: {msg}\nRecent: {recent_msg}', inline = False)
             pinged = True
 
+        # does this even work...? should recheck before updating
         if ping_role:
             nms_embed.add_field(name=f'ping!', value=f'<@207194133717057538>', inline=False)
 
@@ -226,6 +213,7 @@ def check_near_event():
     pagos_blizz, c_pagos_blizz, s_pagos_blizz, r_pagos_blizz = check_weather('Eureka Pagos', 'Blizzards')
     pyros_blizz, c_pyros_blizz, s_pyros_blizz, r_pyros_blizz = check_weather('Eureka Pyros', 'Blizzards')
 
+    # for some reason im sure this overwrites two pings occurring at the same time, which can happen in the case of pyros vs pagos mobs
     data, nms_embed, monster_list = parse_nm_times(pagos_fog, s_pagos_fog, r_pagos_fog, data, monster_list, nms_embed, 'Crab', 'Eureka Pagos', 'Fog')
     data, nms_embed, monster_list = parse_nm_times(pagos_blizz, s_pagos_blizz, r_pagos_blizz, data, monster_list, nms_embed, 'Cassie', 'Eureka Pagos', 'Blizzards')
     data, nms_embed, monster_list = parse_nm_times(pyros_blizz, s_pyros_blizz, r_pyros_blizz, data, monster_list, nms_embed, 'Skoll', 'Eureka Pyros', 'Blizzards')
