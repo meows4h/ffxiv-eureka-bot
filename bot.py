@@ -47,7 +47,7 @@ def run_discord_bot():
         channel = client.get_channel(1276792993809961041)
         async for message in channel.history(limit=50):
             if message.author == client.user:
-                message.delete()
+                await message.delete()
                 break
         
         main_embed = eureka.message_updater(list_of_weather)
@@ -113,7 +113,7 @@ def run_discord_bot():
         main_embed = eureka.message_updater(list_of_weather)
         async for message in channel.history(limit=50):
             if message.author == client.user:
-                message.edit(embed=main_embed)
+                await message.edit(embed=main_embed)
                 break
 
 
