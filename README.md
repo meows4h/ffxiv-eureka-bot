@@ -15,7 +15,7 @@ This is not as much of an application to use as much as it is something to show 
 - eureka.py : Holds all functions and commands that are used for the purposes of generating and updating Eureka data
 - responses.py : Holds all functions and commands that are used for creating messages to be output to Discord
 - main.py : The run command to start the app within bot.py
-- past3hr.csv : CSV file that contains all the weather data (placeholder header columns in this case), enables "time since" functionality
+- data.csv : CSV file that contains all the weather data (placeholder header columns in this case), enables "time since" functionality
 
 ## Work in Progress
 - Update embed with next windows in active time rather than making new popups every single time
