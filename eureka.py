@@ -228,14 +228,6 @@ def check_near_event():
 # todo
 def status_updater(weather, zone):
     
-    data = []
-
-    with open(csv_file, 'r') as csvfile:
-        csvreader = csv.reader(csvfile)
-        fields = next(csvreader)
-        for row in csvreader:
-            data.append(row)
-    
     weather_list, current, soonest, recent = check_weather(zone, weather)
 
     curr_time = get_time_now()
@@ -248,4 +240,9 @@ def status_updater(weather, zone):
     check_time = math.floor((curr_time - parse_time_str(weather_list[recent][2])).total_seconds() - 1400)
     recent_minutes = math.floor(check_time / 60)
 
-    return soon_minutes, recent_minutes
+    ongoing = False
+
+    if current != -1:
+        ongoing = True
+
+    return soon_minutes, recent_minutes, ongoing
