@@ -57,21 +57,33 @@ def run_discord_bot():
     async def subroutine_loop():
         eureka.call_update()
 
+    # this loop manages the embeds that notify when Notorius Monsters may be spawning as well as updating the status message, every minute
     @tasks.loop(minutes=1)
     async def check_loop():
+
+        # getting all relevant weather information, minutes to next, minutes from last, and whether one is ongoing
         crab, last_crab, curr_crab = eureka.status_updater('Fog', 'Eureka Pagos')
         cass, last_cass, curr_cass = eureka.status_updater('Blizzards', 'Eureka Pagos')
         skoll, last_skoll, curr_skoll = eureka.status_updater('Blizzards', 'Eureka Pyros')
 
+        # creating an array to iterate through
         weather_status_array = [[crab, last_crab, curr_crab, 'Fog', 'Pagos'], [cass, last_cass, curr_cass, 'Blizzards', 'Pagos'], [skoll, last_skoll, curr_skoll, 'Blizzards', 'Pyros']]
 
+        # creating the message to pass as the status based on the array
         status_message = ''
-        
-        for array in weather_status_array:
-            if array[3] == True:
-                status_message += f'{array[5]} {array[4]} right now! (+{})'
+        for idx, array in enumerate(weather_status_array):
+            if array[2] == True:
+                status_message += f'{array[4]} {array[3]} right now! (-{array[0]}) (+{array[1]}) | '
+            else:
+                status_message += f'{array[4]} {array[3]} in {array[0]} (+{array[1]}) | '
 
-        status_message = f'Pagos Fog in {crab}m (+{last_crab}m) | Pagos Blizz in {cass}m (+{last_cass}m) | Pyros Blizz in {skoll}m (+{last_skoll}m)'
+            # removing the last divider that is added on (the | )
+            if idx >= len(weather_status_array) - 1:
+                message_len = len(status_message)
+                status_message = status_message[:(message_len-3)]
+
+        # commenting out previously working status message (lacked current context and expandability)
+        #status_message = f'Pagos Fog in {crab}m (+{last_crab}m) | Pagos Blizz in {cass}m (+{last_cass}m) | Pyros Blizz in {skoll}m (+{last_skoll}m)'
 
         game_status = discord.Game(status_message)
         await client.change_presence(status=discord.Status.idle, activity=game_status)
