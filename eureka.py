@@ -280,7 +280,7 @@ def message_updater(weather_arr):
         
         if current != -1:
             ongoing = True
-            timestamp_now = responses.get_disctime(weather_list, current)
+            timestamp_now = responses.get_disc_time(weather_list, current)
             embed_content = f'Currently ongoing for {timestamp_now}!\nRecent: {timestamp_recent}\nUpcoming: {timestamp_soon}'
         else: 
             ongoing = False
