@@ -5,7 +5,7 @@ import discord
 import math
 import responses
 
-csv_file = "past3hr.csv"
+csv_file = "data.csv"
 
 # calls to update the csv file
 def call_update():
