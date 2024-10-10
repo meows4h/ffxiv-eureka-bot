@@ -254,7 +254,7 @@ def status_updater(zone, weather):
 
     return soon_minutes, recent_minutes, ongoing
 
-# todo : clean up and testing -- issue with the embed already, wrong time data, or something is wrong with the way discord time function is working + current time needs to be added to by 24 minutes
+# todo : clean up and testing -- current time needs to be added to by 24 minutes
 # fixing all the problems of not accounting for missing previous data AND future data i.e. checking for -1 indexes !
 
 # for the main edited embed message
