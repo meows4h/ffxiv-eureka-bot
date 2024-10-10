@@ -13,7 +13,7 @@ This is not as much of an application to use as much as it is something to show 
 ## Files
 - bot.py : Holds general bot operations, loops, and basic async functionality
 - eureka.py : Holds all functions and commands that are used for the purposes of generating and updating Eureka data
-- responses.py : Holds all functions and commands that are used for creating messages to be output to Discord
+- responses.py : Holds all functions and commands that are used for creating messages to be output to Discord when prompted by a user
 - main.py : The run command to start the app within bot.py
 - data.csv : CSV file that contains all the weather data (placeholder header columns in this case), enables "time since" functionality
 
