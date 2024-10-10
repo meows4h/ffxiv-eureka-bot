@@ -256,6 +256,7 @@ def status_updater(zone, weather):
 
 # todo : clean up and testing -- current time needs to be added to by 24 minutes
 # fixing all the problems of not accounting for missing previous data AND future data i.e. checking for -1 indexes !
+# adding another data file for the 'guilds' it joins, adding a join message, channel data, setup.. etc etc
 
 # for the main edited embed message
 # passes in a list formatted such as [[zone, weather], [zone, weather], ...]
@@ -263,8 +264,8 @@ def message_updater(weather_arr):
 
     main_embed = discord.Embed(
         title = 'Weather Window Schedule',
-        description = 'Testing Description',
-        color = discord.Color.green(),
+        description = 'Updates every minute.',
+        color = discord.Color.purple(),
         timestamp = (datetime.datetime.now())
     )
 
