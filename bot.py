@@ -62,7 +62,8 @@ def run_discord_bot():
         crab, last_crab = eureka.status_updater('Fog', 'Eureka Pagos')
         cass, last_cass = eureka.status_updater('Blizzards', 'Eureka Pagos')
         skoll, last_skoll = eureka.status_updater('Blizzards', 'Eureka Pyros')
-        await client.change_presence(status=discord.Status.idle, activity=f'Pagos Fog in {crab}m (+{last_crab}m) | Pagos Blizz in {cass}m (+{last_cass}m) | Pyros Blizz in {skoll}m (+{last_skoll}m)')
+        status_message = discord.Game(f'Pagos Fog in {crab}m (+{last_crab}m) | Pagos Blizz in {cass}m (+{last_cass}m) | Pyros Blizz in {skoll}m (+{last_skoll}m)')
+        await client.change_presence(status=discord.Status.idle, activity=status_message)
         embed, check = eureka.check_near_event()
         if check:
             channel = client.get_channel(1276792993809961041)
