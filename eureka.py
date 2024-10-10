@@ -138,6 +138,10 @@ def parse_nm_times(weather_list, soonest, recent, nms_embed, zone, weather, boss
         for row in csvreader:
             data.append(row)
 
+    post_embed = False # if a new weather window is coming up
+    ping_role = False # if it has been enough time for boss to 100% spawn
+    needs_embed = False # whether it needs an embed
+
     # assuming it finds something
     if soonest != -1:
 
@@ -158,10 +162,6 @@ def parse_nm_times(weather_list, soonest, recent, nms_embed, zone, weather, boss
             recent_msg = f'{responses.get_disc_time(weather_list, recent, offset=True)}'
         else:
             recent_minutes = 0
-
-        post_embed = False # if a new weather window is coming up
-        ping_role = False # if it has been enough time for boss to 100% spawn
-        needs_embed = False # whether it needs an embed
 
         # this is from the csv, checks whether or not something has already had an embed made
         if int(weather_list[soonest][3]) == 0:
