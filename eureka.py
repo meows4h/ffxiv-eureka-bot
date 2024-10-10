@@ -70,13 +70,16 @@ def call_update():
         csvwriter.writerow(fields)
         csvwriter.writerows(data)
 
+
 # getting time now
 def get_time_now():
     return datetime.datetime.utcnow()
 
+
 # parses time
 def parse_time_str(time_str):
     return datetime.datetime.fromisoformat(time_str)
+
 
 # check weather
 def check_weather(zone, weather):
@@ -120,6 +123,7 @@ def check_weather(zone, weather):
             soonest = idx
 
     return list_weather, current, soonest, recent
+
 
 # parsing data into embeds
 def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed, boss_name, zone, weather):
@@ -166,6 +170,7 @@ def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed,
             pinged = True
 
         # does this even work...? should recheck before updating
+        # this gets the correct @ but this needs to be a seperate message, as it does not ping appropriately
         if ping_role:
             nms_embed.add_field(name=f'ping!', value=f'<@207194133717057538>', inline=False)
 
@@ -188,6 +193,7 @@ def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed,
 
     monster_list.append(monster)
     return data, nms_embed, monster_list
+
 
 # checker
 def check_near_event():
@@ -225,8 +231,9 @@ def check_near_event():
 
     return nms_embed, monster
 
-# todo
-def status_updater(weather, zone):
+
+# status shown on the bot
+def status_updater(zone, weather):
     
     weather_list, current, soonest, recent = check_weather(zone, weather)
 
@@ -246,3 +253,41 @@ def status_updater(weather, zone):
         ongoing = True
 
     return soon_minutes, recent_minutes, ongoing
+
+# todo : clean up and testing
+# fixing all the problems of not accounting for missing previous data AND future data i.e. checking for -1 indexes !
+
+# for the main edited embed message
+# passes in a list formatted such as [[zone, weather], [zone, weather], ...]
+def message_updater(weather_arr):
+
+    main_embed = discord.Embed(
+        title = 'Weather Window Schedule',
+        description = 'Testing Description',
+        color = discord.Color.green(),
+        timestamp = (datetime.datetime.now())
+    )
+
+    # storing all the desired weather time data
+    weather_check = []
+
+    for idx, weather in enumerate(weather_arr):
+
+        weather_list, current, soonest, recent = check_weather(weather[0], weather[1])
+
+        timestamp_soon = responses.get_disc_time(weather_list, soonest)
+        timestamp_recent = responses.get_disc_time(weather_list, recent)
+        
+        if current != -1:
+            ongoing = True
+            timestamp_now = responses.get_disctime(weather_list, current)
+            embed_content = f'Currently ongoing for {timestamp_now}!\nRecent: {timestamp_recent}\nUpcoming: {timestamp_soon}'
+        else: 
+            ongoing = False
+            embed_content = f'Recent: {timestamp_recent}\nUpcoming: {timestamp_soon}'
+
+        # eureka -> 7: slices out 'Eureka '
+        weather_check.append([ongoing, timestamp_soon, timestamp_recent, weather[0], weather[1]])
+        main_embed.add_field(name=f'{weather[0][7:]} {weather[1]}', value=f'{embed_content}', inline = False)
+
+    return main_embed

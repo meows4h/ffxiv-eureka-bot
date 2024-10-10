@@ -30,68 +30,23 @@ def make_embed(zone, weather):
     if current != -1:
 
         timestamp = get_disc_time(weather_list, current)
-        curr_msg2 = f' {timestamp}'
+        curr_msg = f' {timestamp}'
 
-        curr_time = math.floor((eureka.parse_time_str(weather_list[current][2]) - current_time).total_seconds() + 1400)
-
-        curr_sec = curr_time % 60
-        curr_min = math.floor(curr_time / 60) % 60
-        curr_hour = math.floor((curr_time / 60) / 60)
-
-        curr_msg = ''
-
-        if curr_hour > 0:
-            curr_msg += f'{curr_hour} hours, '
-        if curr_min > 0:
-            curr_msg += f'{curr_min} minutes, '
-        if curr_sec >= 0:
-            curr_msg += f'{curr_sec} seconds left.'
-
-        embed.add_field(name=f'Current {weather}', value=curr_msg2, inline=False)
+        embed.add_field(name=f'Current {weather}', value=curr_msg, inline=False)
         
     if soonest != -1:
 
         timestamp = get_disc_time(weather_list, soonest)
-        soon_msg2 = f' {timestamp}'
+        soon_msg = f' {timestamp}'
 
-        soon_time = math.floor((eureka.parse_time_str(weather_list[soonest][2]) - current_time).total_seconds())
-
-        soon_sec = soon_time % 60
-        soon_min = math.floor(soon_time / 60) % 60
-        soon_hour = math.floor((soon_time / 60) / 60)
-
-        soon_msg = ''
-
-        if soon_hour > 0:
-            soon_msg += f'{soon_hour} hours, '
-        if soon_min > 0:
-            soon_msg += f'{soon_min} minutes, '
-        if soon_sec >= 0:
-            soon_msg += f'{soon_sec} seconds.'
-
-        embed.add_field(name=f'Next {weather}', value=soon_msg2, inline = False)
+        embed.add_field(name=f'Next {weather}', value=soon_msg, inline = False)
 
     if recent != -1:
 
         timestamp = get_disc_time(weather_list, recent)
-        last_msg2 = f' {timestamp}'
+        last_msg = f' {timestamp}'
 
-        last_time = math.floor((current_time - eureka.parse_time_str(weather_list[recent][2])).total_seconds() - 1400)
-
-        last_sec = last_time % 60
-        last_min = math.floor(last_time / 60) % 60
-        last_hour = math.floor((last_time / 60) / 60)
-
-        last_msg = ''
-
-        if last_hour > 0:
-            last_msg += f'{last_hour} hours, '
-        if last_min > 0:
-            last_msg += f'{last_min} minutes, '
-        if last_sec >= 0:
-            last_msg += f'{last_sec} seconds ago.'
-
-        embed.add_field(name=f'Last {weather}', value=last_msg2, inline=False)
+        embed.add_field(name=f'Last {weather}', value=last_msg, inline=False)
 
     return embed
 

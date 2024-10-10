@@ -4,6 +4,9 @@ import responses
 import eureka
 import csv
 
+# for main embed, global variable that can be updated
+list_of_weather = [['Eureka Pagos', 'Fog'], ['Eureka Pagos', 'Blizzards'], ['Eureka Pyros', 'Blizzards']]
+
 async def send_message(message, user_message, is_private):
     try:
         response, embed = responses.get_response(message, user_message)
@@ -36,11 +39,23 @@ def run_discord_bot():
         game = discord.Game('Eureka Data Coming Online...')
         await client.change_presence(status=discord.Status.idle, activity=game)
 
+
+        # maybe include a send message to a particular channel, then edit that embed with updated time stamps as time periods pass.
+        # the intital send is here, the update is in the loop
+        # if the last message sent is from the bot, delete it
+
+        channel = client.get_channel(1276792993809961041)
+        async for message in channel.history(limit=50):
+            if message.author == client.self:
+                message.delete()
+                break
+        
+        main_embed = eureka.message_updater(list_of_weather)
+
+        await channel.send(embed=main_embed)
+
         try:
             subroutine_loop.start()
-            # maybe include a send message to a particular channel, then edit that embed with updated time stamps as time periods pass.
-            # the intital send is here, the update is in the loop
-            # if the last message sent is from the bot, delete it
             print("Subroutine started.")
         except:
             subroutine_loop.cancel()
@@ -62,35 +77,44 @@ def run_discord_bot():
     async def check_loop():
 
         # getting all relevant weather information, minutes to next, minutes from last, and whether one is ongoing
-        crab, last_crab, curr_crab = eureka.status_updater('Fog', 'Eureka Pagos')
-        cass, last_cass, curr_cass = eureka.status_updater('Blizzards', 'Eureka Pagos')
-        skoll, last_skoll, curr_skoll = eureka.status_updater('Blizzards', 'Eureka Pyros')
+        crab, last_crab, curr_crab = eureka.status_updater('Eureka Pagos', 'Fog')
+        cass, last_cass, curr_cass = eureka.status_updater('Eureka Pagos', 'Blizzards')
+        skoll, last_skoll, curr_skoll = eureka.status_updater('Eureka Pyros', 'Blizzards')
 
         # creating an array to iterate through
-        weather_status_array = [[crab, last_crab, curr_crab, 'Fog', 'Pagos'], [cass, last_cass, curr_cass, 'Blizzards', 'Pagos'], [skoll, last_skoll, curr_skoll, 'Blizzards', 'Pyros']]
+        weather_status_array = [[crab, last_crab, curr_crab, 'Pagos', 'Fog'], [cass, last_cass, curr_cass, 'Pagos', 'Blizzards'], [skoll, last_skoll, curr_skoll, 'Pyros', 'Blizzards']]
 
         # creating the message to pass as the status based on the array
         status_message = ''
         for idx, array in enumerate(weather_status_array):
             if array[2] == True:
-                status_message += f'{array[4]} {array[3]} right now! (-{array[0]}) (+{array[1]}) | '
+                status_message += f'{array[3]} {array[4]} right now! (-{array[0]}m) (+{array[1]}m) | '
             else:
-                status_message += f'{array[4]} {array[3]} in {array[0]} (+{array[1]}) | '
+                status_message += f'{array[3]} {array[4]} in {array[0]}m (+{array[1]}m) | '
 
             # removing the last divider that is added on (the | )
             if idx >= len(weather_status_array) - 1:
                 message_len = len(status_message)
                 status_message = status_message[:(message_len-3)]
 
-        # commenting out previously working status message (lacked current context and expandability)
-        #status_message = f'Pagos Fog in {crab}m (+{last_crab}m) | Pagos Blizz in {cass}m (+{last_cass}m) | Pyros Blizz in {skoll}m (+{last_skoll}m)'
-
+        # update status message
         game_status = discord.Game(status_message)
         await client.change_presence(status=discord.Status.idle, activity=game_status)
+
+        # alert embed
         embed, check = eureka.check_near_event()
-        if check:
-            channel = client.get_channel(1276792993809961041)
-            await channel.send(embed=embed)
+        # commented out for trying main embed thing
+        # if check:
+        #     channel = client.get_channel(1276792993809961041)
+        #     await channel.send(embed=embed)
+
+        # main embed
+        channel = client.get_channel(1276792993809961041)
+        main_embed = eureka.message_updater(list_of_weather)
+        async for message in channel.history(limit=50):
+            if message.author == client.self:
+                message.edit(embed=main_embed)
+                break
 
 
     @client.event
