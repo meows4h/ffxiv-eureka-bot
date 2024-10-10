@@ -126,86 +126,9 @@ def check_weather(zone, weather):
 
 
 # parsing data into embeds
-def parse_nm_times(weather_list, soonest, recent, data, monster_list, nms_embed, boss_name, zone, weather):
+def parse_nm_times(weather_list, soonest, recent, nms_embed, zone, weather, boss_name):
 
     curr_time = get_time_now()
-
-    monster = False
-
-    # assuming it finds something
-    if soonest != -1:
-
-        # realized there is unintended behvaior when no recent weather window can be found, instead takes the last point of data (at index -1); bandaid fix for now
-        if recent == -1:
-            recent = soonest
-
-        # finding the time from the current moment to the next weather window
-        literal_time = parse_time_str(weather_list[soonest][2]) # this is the literal time it takes place at
-        weather_time = math.floor((literal_time - curr_time).total_seconds()) # this gets something that only contains the amount of time to the event
-
-        seconds = weather_time % 60
-        minutes = math.floor(weather_time / 60) % 60
-        hours = math.floor((weather_time / 60) / 60)
-
-        # building output time message + the disc timestamp
-        msg = f'{responses.get_disc_time(weather_list, soonest)}'
-
-        # finding the time from recent weather window to the current moment
-        check_time = math.floor((curr_time - parse_time_str(weather_list[recent][2])).total_seconds() - 1400)
-        recent_seconds = check_time % 60
-        recent_minutes = math.floor(check_time / 60) % 60
-        recent_hours = math.floor((check_time / 60) / 60)
-        
-        recent_msg = f'{responses.get_disc_time(weather_list, recent)}'
-
-        pinged = False
-        ping_role = False
-
-        if (minutes < 15 and hours == 0 and int(weather_list[soonest][3]) == 0) and (recent_hours >= 2 or (recent_hours >= 1 and recent_minutes >= 45)):
-            nms_embed.add_field(name=f'For Sure {boss_name} Soon', value=f'Upcoming: {msg}\nRecent: {recent_msg}', inline = False)
-            pinged = True
-            ping_role = True
-        elif (minutes < 15 and hours == 0 and int(weather_list[soonest][3]) == 0):
-            nms_embed.add_field(name=f'Possible {boss_name} Soon', value=f'Upcoming: {msg}\nRecent: {recent_msg}', inline = False)
-            pinged = True
-
-        # does this even work...? should recheck before updating
-        # this gets the correct @ but this needs to be a seperate message, as it does not ping appropriately
-        if ping_role:
-            nms_embed.add_field(name=f'ping!', value=f'<@207194133717057538>', inline=False)
-
-        if pinged:
-
-            monster = True
-
-            for row in data:
-                if f"{row[0]}" == f"{zone}" and f"{row[1]}" == f"{weather}" and f"{row[2]}" == f"{weather_list[soonest][2]}":
-                    row[3] = 1
-                    break
-
-            fields = ['zone','weather','time','pinged']
-
-            # write to the csv
-            with open(csv_file, 'w', newline='') as csvfile:
-                csvwriter = csv.writer(csvfile)
-                csvwriter.writerow(fields)
-                csvwriter.writerows(data)
-
-    monster_list.append(monster)
-    return data, nms_embed, monster_list
-
-
-# checker
-def check_near_event():
-
-    monster_list = []
-
-    nms_embed = discord.Embed(
-            title = 'NM ALERT',
-            description = 'Notorius Monster Approaching!',
-            color = discord.Color.red(),
-            timestamp = (datetime.datetime.now())
-    )
 
     data = []
 
@@ -215,21 +138,94 @@ def check_near_event():
         for row in csvreader:
             data.append(row)
 
-    pagos_fog, c_pagos_fog, s_pagos_fog, r_pagos_fog = check_weather('Eureka Pagos', 'Fog')
-    pagos_blizz, c_pagos_blizz, s_pagos_blizz, r_pagos_blizz = check_weather('Eureka Pagos', 'Blizzards')
-    pyros_blizz, c_pyros_blizz, s_pyros_blizz, r_pyros_blizz = check_weather('Eureka Pyros', 'Blizzards')
+    # assuming it finds something
+    if soonest != -1:
 
-    # for some reason im sure this overwrites two pings occurring at the same time, which can happen in the case of pyros vs pagos mobs
-    data, nms_embed, monster_list = parse_nm_times(pagos_fog, s_pagos_fog, r_pagos_fog, data, monster_list, nms_embed, 'Crab', 'Eureka Pagos', 'Fog')
-    data, nms_embed, monster_list = parse_nm_times(pagos_blizz, s_pagos_blizz, r_pagos_blizz, data, monster_list, nms_embed, 'Cassie', 'Eureka Pagos', 'Blizzards')
-    data, nms_embed, monster_list = parse_nm_times(pyros_blizz, s_pyros_blizz, r_pyros_blizz, data, monster_list, nms_embed, 'Skoll', 'Eureka Pyros', 'Blizzards')
+        # finding the time from the current moment to the next weather window
+        soon_literal = parse_time_str(weather_list[soonest][2]) # this is the literal time it takes place at
+        soon_time = math.floor((soon_literal - curr_time).total_seconds()) # this gets something that only contains the amount of time to the event
+        soon_minutes = math.floor(soon_time / 60)
 
-    if True in monster_list:
-        monster = True
-    else:
-        monster = False
+        # building output time message + the disc timestamp
+        msg = f'{responses.get_disc_time(weather_list, soonest)}'
 
-    return nms_embed, monster
+        # finding the time from recent weather window to the current moment
+        if recent != -1:
+            recent_literal = parse_time_str(weather_list[recent][2])
+            recent_time = math.floor((curr_time - recent_literal).total_seconds() - 1400)
+            recent_minutes = math.floor(recent_time / 60)
+            
+            recent_msg = f'{responses.get_disc_time(weather_list, recent, offset=True)}'
+        else:
+            recent_minutes = 0
+
+        post_embed = False # if a new weather window is coming up
+        ping_role = False # if it has been enough time for boss to 100% spawn
+        needs_embed = False # whether it needs an embed
+
+        # this is from the csv, checks whether or not something has already had an embed made
+        if int(weather_list[soonest][3]) == 0:
+            needs_embed = True
+
+        # if there is less than 15 minutes to the weather and it needs embed
+        if (soon_minutes < 15 and needs_embed):
+
+            embed_msg = f'Upcoming: {msg}'
+            if recent != -1:
+                embed_msg += f'\nRecent: {recent_msg}'
+
+            nms_embed.add_field(name=f'{boss_name} Soon', value=f'{embed_msg}', inline = False)
+            post_embed = True
+
+        # if there has been an hour and 36 minutes since the last one
+        # reasoning: the minutes calculated stem from the end of a window, typically bosses spawn at the beginning of a window (24 minutes earlier)
+        # therefore: it has usually been two hours since the last one
+        if (soon_minutes < 15 and needs_embed and recent_minutes >= 96):
+            ping_role = True
+
+        if post_embed:
+
+            fields = ['zone','weather','time','pinged']
+
+            # updating csv information
+            for row in data:
+                if f"{row[0]}" == f"{zone}" and f"{row[1]}" == f"{weather}" and f"{row[2]}" == f"{weather_list[soonest][2]}":
+                    row[3] = 1
+                    break
+
+            # write to the csv
+            with open(csv_file, 'w', newline='') as csvfile:
+                csvwriter = csv.writer(csvfile)
+                csvwriter.writerow(fields)
+                csvwriter.writerows(data)
+
+    return nms_embed, post_embed, ping_role
+
+
+# checker for creating embeds
+def check_near_event(weather_arr):
+
+    nms_embed = discord.Embed(
+            title = 'NM ALERT',
+            description = 'Notorius Monster Approaching!',
+            color = discord.Color.red(),
+            timestamp = (datetime.datetime.now())
+    )
+
+    # just keeps track of whether or not something needs to be done
+    embed_post = False
+    ping_post = False
+
+    for weather in weather_arr:
+        weather_list, current, soonest, recent = check_weather(weather[0], weather[1])
+        nms_embed, posting, pinging = parse_nm_times(weather_list, soonest, recent, nms_embed, weather[0], weather[1], weather[2])
+        
+        if posting:
+            embed_post = True
+        if pinging:
+            ping_post = True
+
+    return nms_embed, embed_post, ping_post
 
 
 # status shown on the bot
@@ -239,13 +235,21 @@ def status_updater(zone, weather):
 
     curr_time = get_time_now()
 
-    literal_time = parse_time_str(weather_list[soonest][2]) # this is the literal time it takes place at
-    weather_time = math.floor((literal_time - curr_time).total_seconds()) # this gets something that only contains the amount of time to the event
-    soon_minutes = math.floor(weather_time / 60)
+    # finding next event
+    if soonest != -1:
+        soon_literal = parse_time_str(weather_list[soonest][2]) # this is the literal time it takes place at
+        soon_time = math.floor((soon_literal - curr_time).total_seconds()) # this gets something that only contains the amount of time to the event
+        soon_minutes = math.floor(soon_time / 60)
+    else:
+        soon_minutes = '?' # if no upcoming
 
     # finding the time from recent weather window to the current moment
-    check_time = math.floor((curr_time - parse_time_str(weather_list[recent][2])).total_seconds() - 1400)
-    recent_minutes = math.floor(check_time / 60)
+    if recent != -1:
+        recent_literal = parse_time_str(weather_list[recent][2])
+        recent_time = math.floor((curr_time - recent_literal).total_seconds() - 1400)
+        recent_minutes = math.floor(recent_time / 60)
+    else:
+        recent_minutes = '?'
 
     ongoing = False
 
@@ -259,7 +263,7 @@ def status_updater(zone, weather):
 # adding another data file for the 'guilds' it joins, adding a join message, channel data, setup.. etc etc
 
 # for the main edited embed message
-# passes in a list formatted such as [[zone, weather], [zone, weather], ...]
+# passes in a list formatted such as [[zone, weather, boss_name], [zone, weather, boss_name], ...]
 def message_updater(weather_arr):
 
     main_embed = discord.Embed(
@@ -269,26 +273,30 @@ def message_updater(weather_arr):
         timestamp = (datetime.datetime.now())
     )
 
-    # storing all the desired weather time data
-    weather_check = []
-
-    for idx, weather in enumerate(weather_arr):
+    for weather in weather_arr:
 
         weather_list, current, soonest, recent = check_weather(weather[0], weather[1])
 
-        timestamp_soon = responses.get_disc_time(weather_list, soonest)
-        timestamp_recent = responses.get_disc_time(weather_list, recent)
-        
+        embed_content = ''
+
         if current != -1:
-            ongoing = True
-            timestamp_now = responses.get_disc_time(weather_list, current)
-            embed_content = f'Currently ongoing for {timestamp_now}!\nRecent: {timestamp_recent}\nUpcoming: {timestamp_soon}'
-        else: 
-            ongoing = False
-            embed_content = f'Recent: {timestamp_recent}\nUpcoming: {timestamp_soon}'
+            timestamp_now = responses.get_disc_time(weather_list, current, offset=True)
+            embed_content += f'Currently ongoing, gone {timestamp_now}!\n'
+
+        if soonest != -1:
+            timestamp_soon = responses.get_disc_time(weather_list, soonest)
+            embed_content += f'Upcoming: {timestamp_soon}\n'
+
+        if recent != -1:
+            timestamp_recent = responses.get_disc_time(weather_list, recent, offset=True)
+            embed_content += f'Recent: {timestamp_recent}\n'
+
+        # cutting off the last '\n'
+        str_length = len(embed_content)
+        if str_length > 1:
+            embed_content = embed_content[:(str_length-1)]
 
         # eureka -> 7: slices out 'Eureka '
-        weather_check.append([ongoing, timestamp_soon, timestamp_recent, weather[0], weather[1]])
         main_embed.add_field(name=f'{weather[0][7:]} {weather[1]}', value=f'{embed_content}', inline = False)
 
     return main_embed

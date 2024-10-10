@@ -5,9 +5,13 @@ import datetime as date_time
 import discord
 from datetime import timedelta
 
-def get_disc_time(weather_list, idx):
+def get_disc_time(weather_list, idx, offset=False):
 
     dt = eureka.parse_time_str(weather_list[idx][2])
+
+    if offset:
+        dt += timedelta(seconds=1400)
+
     timestamp = f'<t:{round((dt - date_time.datetime(1970, 1, 1)) / timedelta(seconds=1))}:R>'
     
     return timestamp
@@ -16,7 +20,6 @@ def get_disc_time(weather_list, idx):
 def make_embed(zone, weather):
 
     eureka.call_update()
-    current_time = eureka.get_time_now()
     weather_list, current, soonest, recent = eureka.check_weather(zone, weather)
 
     embed = discord.Embed(

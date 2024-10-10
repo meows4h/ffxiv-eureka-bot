@@ -5,7 +5,7 @@ import eureka
 import csv
 
 # for main embed, global variable that can be updated
-list_of_weather = [['Eureka Pagos', 'Fog'], ['Eureka Pagos', 'Blizzards'], ['Eureka Pyros', 'Blizzards']]
+list_of_weather = [['Eureka Pagos', 'Fog', 'Crab'], ['Eureka Pagos', 'Blizzards', 'Cassie'], ['Eureka Pyros', 'Blizzards', 'Skoll']]
 
 async def send_message(message, user_message, is_private):
     try:
@@ -38,7 +38,6 @@ def run_discord_bot():
         print(f'{client.user} is now running!')
         game = discord.Game('Eureka Data Coming Online...')
         await client.change_presence(status=discord.Status.idle, activity=game)
-
 
         # maybe include a send message to a particular channel, then edit that embed with updated time stamps as time periods pass.
         # the intital send is here, the update is in the loop
@@ -98,15 +97,19 @@ def run_discord_bot():
                 status_message = status_message[:(message_len-3)]
 
         # update status message
-        game_status = discord.Game(status_message)
-        await client.change_presence(status=discord.Status.idle, activity=game_status)
+        activity_status = discord.Activity(
+            type=discord.ActivityType.watching, 
+            name='Eureka Weather',
+            state=f'{status_message}')
+        await client.change_presence(status=discord.Status.idle, activity=activity_status)
 
         # alert embed
-        embed, check = eureka.check_near_event()
-        # commented out for trying main embed thing
-        # if check:
-        #     channel = client.get_channel(1276792993809961041)
-        #     await channel.send(embed=embed)
+        embed, post_embed, post_ping = eureka.check_near_event(list_of_weather)
+        if post_embed:
+            channel = client.get_channel(1210511366344151090)
+            await channel.send(embed=embed)
+            if post_ping:
+                await channel.send(content='<@207194133717057538>')
 
         # main embed
         channel = client.get_channel(1276792993809961041)
@@ -115,7 +118,6 @@ def run_discord_bot():
             if message.author == client.user:
                 await message.edit(embed=main_embed)
                 break
-
 
     @client.event
     async def on_message(message):
