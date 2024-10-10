@@ -237,3 +237,15 @@ def status_updater(weather, zone):
             data.append(row)
     
     weather_list, current, soonest, recent = check_weather(zone, weather)
+
+    curr_time = get_time_now()
+
+    literal_time = parse_time_str(weather_list[soonest][2]) # this is the literal time it takes place at
+    weather_time = math.floor((literal_time - curr_time).total_seconds()) # this gets something that only contains the amount of time to the event
+    soon_minutes = math.floor(weather_time / 60)
+
+    # finding the time from recent weather window to the current moment
+    check_time = math.floor((curr_time - parse_time_str(weather_list[recent][2])).total_seconds() - 1400)
+    recent_minutes = math.floor(check_time / 60)
+
+    return soon_minutes, recent_minutes
